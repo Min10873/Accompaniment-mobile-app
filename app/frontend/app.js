@@ -6,6 +6,7 @@ const douyinTab = document.querySelector("#tab-douyin");
 const uploadTab = document.querySelector("#tab-upload");
 const textarea = document.querySelector("#share-text");
 const audioFile = document.querySelector("#audio-file");
+const songTitle = document.querySelector("#song-title");
 const pasteButton = document.querySelector("#paste-button");
 const pasteHint = document.querySelector("#paste-hint");
 const submitButton = document.querySelector("#submit-button");
@@ -26,6 +27,12 @@ let resultTab = "play";
 homeButton.addEventListener("click", resetToHome);
 douyinTab.addEventListener("click", () => setHomeTab("douyin"));
 uploadTab.addEventListener("click", () => setHomeTab("upload"));
+audioFile.addEventListener("change", () => {
+  const file = audioFile.files && audioFile.files[0];
+  if (file && !songTitle.value.trim()) {
+    songTitle.value = titleFromFilename(file.name);
+  }
+});
 
 pasteButton.addEventListener("click", async () => {
   if (!navigator.clipboard || typeof navigator.clipboard.readText !== "function") {
@@ -110,6 +117,7 @@ uploadForm.addEventListener("submit", async (event) => {
 
   const formData = new FormData();
   formData.append("file", file);
+  formData.append("title", songTitle.value.trim() || titleFromFilename(file.name) || "上传的音频");
 
   try {
     const response = await fetch("/api/uploads", {
@@ -187,6 +195,7 @@ function resetToHome() {
   window.history.replaceState({}, "", url);
   textarea.value = "";
   audioFile.value = "";
+  songTitle.value = "";
   pasteHint.textContent = "从抖音复制后，回到这里点“粘贴链接”。如果按钮没反应，就长按输入框选择粘贴。";
   homeButton.hidden = true;
   homePage.hidden = false;
@@ -249,6 +258,7 @@ function setBusy(isBusy) {
   pasteButton.disabled = isBusy;
   uploadButton.disabled = isBusy;
   audioFile.disabled = isBusy;
+  songTitle.disabled = isBusy;
   textarea.readOnly = isBusy;
   submitButton.textContent = isBusy ? "处理中..." : "开始处理";
   uploadButton.textContent = isBusy ? "处理中..." : "上传音频";
@@ -295,6 +305,8 @@ function renderSuccess(pitchMessage = "", isPitchBusy = pitchBusy) {
   const currentVariant = currentTaskData.audio_variants[currentVariantKey];
   const audioUrl = currentVariant.audio_url;
   const fullUrl = new URL(audioUrl, window.location.href).href;
+  const songName = displayTitle(currentTaskData.title);
+  const downloadName = downloadFilename(songName, currentVariantKey, currentVariant);
   const validUntil = formatValidUntil(currentVariant.expires_at || currentTaskData.expires_at, currentVariant.created_at);
   const variants = Object.entries(currentTaskData.audio_variants);
   const variantButtons = variants.length > 1
@@ -311,7 +323,8 @@ function renderSuccess(pitchMessage = "", isPitchBusy = pitchBusy) {
   const pitchPanelHidden = resultTab === "pitch" ? "" : " hidden";
   result.className = "result notice success";
   result.innerHTML = `
-    <h2>处理好了</h2>
+    <h2>伴奏已准备好</h2>
+    <p class="song-title">${escapeHtml(songName)}</p>
     <div class="tab-bar result-tabs" role="tablist" aria-label="结果功能">
       <button id="result-tab-play" class="tab-button${resultTab === "play" ? " active" : ""}" type="button" role="tab" aria-selected="${resultTab === "play"}" aria-controls="play-panel">播放保存</button>
       <button id="result-tab-pitch" class="tab-button${resultTab === "pitch" ? " active" : ""}" type="button" role="tab" aria-selected="${resultTab === "pitch"}" aria-controls="pitch-panel">变调处理</button>
@@ -329,7 +342,7 @@ function renderSuccess(pitchMessage = "", isPitchBusy = pitchBusy) {
         <audio controls src="${escapeAttribute(audioUrl)}"></audio>
       </div>
       <div class="result-actions">
-        <a class="button-link primary" href="${escapeAttribute(audioUrl)}" download>下载音频</a>
+        <a class="button-link primary" href="${escapeAttribute(audioUrl)}" download="${escapeAttribute(downloadName)}">下载音频</a>
         <button class="secondary" type="button" id="copy-link">复制链接</button>
       </div>
       <p class="small-note">当前音频链接有效到 ${escapeHtml(validUntil)}。</p>
@@ -497,6 +510,48 @@ function addVariantFromPitch(data, direction = null, semitones = null) {
     expires_at: data.expires_at || currentTaskData.expires_at,
     label: labelForVariant(data.variant_key, { direction, semitones }),
   };
+}
+
+function displayTitle(value) {
+  const title = String(value || "").trim();
+  return title || "未命名伴奏";
+}
+
+function titleFromFilename(filename) {
+  const name = String(filename || "").split(/[\\/]/).pop() || "";
+  return name.replace(/\.[^.]+$/, "").trim();
+}
+
+function downloadFilename(songName, key, variant = {}) {
+  const title = safeFilenamePart(songName || "未命名伴奏");
+  const version = safeFilenamePart(labelForDownload(key, variant));
+  const extension = audioExtension(variant.audio_url);
+  return `${title}-${version}-歌伴侣.${extension}`;
+}
+
+function labelForDownload(key, variant = {}) {
+  if (key === "original") {
+    return "原调";
+  }
+  const [directionFromKey, semitonesFromKey] = key.split("_");
+  const direction = variant.direction || directionFromKey;
+  const semitones = variant.semitones || semitonesFromKey;
+  const directionLabel = direction === "down" ? "降低" : "升高";
+  return `${directionLabel}${semitones}半音`;
+}
+
+function audioExtension(audioUrl = "") {
+  const path = String(audioUrl).split("?")[0];
+  const match = path.match(/\.([a-z0-9]+)$/i);
+  return match ? match[1].toLowerCase() : "mp3";
+}
+
+function safeFilenamePart(value) {
+  const cleaned = String(value || "")
+    .replace(/[\\/:*?"<>|\r\n]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return (cleaned || "未命名伴奏").slice(0, 40);
 }
 
 function labelForVariant(key, variant = {}) {

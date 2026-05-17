@@ -81,6 +81,8 @@
 - 本地父辈 UI 信息架构已调整：Page 1 和 Page 2 分离；Page 1 使用 `抖音链接/上传音频` 两个 tab；Page 2 使用 `播放保存/变调处理` 两个 tab；只有原调一个版本时不再显示重复的 `原调` 切换按钮；父辈端变调半音下拉收敛为 `1-5`；Playwright 手机视口冒烟通过，截图 `/private/tmp/accompaniment-tabs-layout.png`。
 - 新 tab 信息架构 QA 任务已派出：`02_vibe/tasks/Q-TABBED-IA-VALIDATE-01.md`，建议使用 `gemini flash`，结果路径为 `02_vibe/results/Q-TABBED-IA-VALIDATE-01.result.md`。
 - Q 已返回 tab 信息架构验证，结论为通过：Page 1/2 分离、Page 1 双 tab、Page 2 双 tab、单原调时隐藏版本切换条、半音 `1-5`、返回首页和后端回归均通过；截图已保存到 `02_vibe/results/screenshots/`。
+- 本地已实现歌曲名和水印：Page 2 标题从 `处理好了` 改为 `伴奏已准备好` 并显示歌曲名；上传入口新增 `歌曲名字` 输入框，选择文件后默认填入去后缀文件名；后端保存并返回 `title`；下载文件名按 `歌曲名-版本-歌伴侣.后缀` 生成；抖音提取和变调生成的音频写入 metadata `comment=from LFAPP`，上传音频在 ffmpeg 可处理时尽力写入同一 metadata。
+- 歌曲名/水印 QA 任务已派出：`02_vibe/tasks/Q-TITLE-WATERMARK-VALIDATE-01.md`，建议使用 `gemini flash`，结果路径为 `02_vibe/results/Q-TITLE-WATERMARK-VALIDATE-01.result.md`。
 - 新目录已成为当前主线：`00_inbox/` 到 `07_traces/`。
 - 旧问题和旧输出已复制到 `99_archive/`。
 
@@ -95,9 +97,10 @@
 
 ## 下一步候选
 
-1. 发布并手机实测粘贴体验、返回首页、成功页布局、上传入口和 tab 信息架构改动。
-2. 明确 `deploy.sh rollback` 在 systemd 管理后的使用边界，避免误用 legacy pid 启停。
-3. 旧目录仍可稍后清理；删除前必须再次确认。
+1. 等待并整合 `Q-TITLE-WATERMARK-VALIDATE-01` 验证结果。
+2. 发布并手机实测粘贴体验、返回首页、成功页布局、上传入口、tab 信息架构、歌曲名和下载水印改动。
+3. 明确 `deploy.sh rollback` 在 systemd 管理后的使用边界，避免误用 legacy pid 启停。
+4. 旧目录仍可稍后清理；删除前必须再次确认。
 
 ## 待清理旧目录
 

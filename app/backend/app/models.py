@@ -53,6 +53,7 @@ class TaskCreateRequest(BaseModel):
 class TaskResponse(BaseModel):
     task_id: str | None
     status: TaskStatus | None
+    title: str | None = None
     expires_at: str | None = None
     audio_url: str | None = None
     audio_variants: dict[str, "AudioVariant"] | None = None
@@ -116,6 +117,7 @@ class PitchJobRecord(BaseModel):
 class TaskRecord(BaseModel):
     task_id: str
     status: TaskStatus
+    title: str | None = None
     created_at: str
     updated_at: str
     expires_at: str

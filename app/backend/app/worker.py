@@ -88,7 +88,7 @@ def process_task_real(record: TaskRecord) -> TaskRecord:
     )
 
     try:
-        extract_mp3(video_path, audio_path)
+        extract_mp3(video_path, audio_path, record.title)
     except RuntimeError:
         return _fail_task(record, ErrorCode.EXTRACT_FAILED, "extract failed")
     finally:
@@ -134,7 +134,7 @@ def process_pitch_job(task_id: str, pitch_job_id: str) -> TaskRecord | None:
         if config.MOCK_PROCESSING:
             _write_mock_audio(audio_path)
         else:
-            pitch_shift_mp3(source_path, audio_path, job.direction, job.semitones)
+            pitch_shift_mp3(source_path, audio_path, job.direction, job.semitones, record.title)
     except RuntimeError:
         record, _job = _fail_pitch_job(record, job, ErrorCode.PITCH_FAILED, "pitch failed")
         return record

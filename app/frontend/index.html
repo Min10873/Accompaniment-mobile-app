@@ -27,6 +27,8 @@
         <form id="upload-form" class="panel tab-panel" role="tabpanel" aria-labelledby="tab-upload" hidden>
           <label for="audio-file">上传手机里的音频</label>
           <input id="audio-file" name="file" type="file" accept=".mp3,.m4a,.wav,audio/mpeg,audio/mp4,audio/wav" />
+          <label for="song-title">歌曲名字</label>
+          <input id="song-title" name="title" type="text" maxlength="80" placeholder="选择文件后会自动填写" />
           <p class="input-hint">已有伴奏或录音时用这个入口。支持 mp3、m4a、wav，最大 20MB。</p>
           <button id="upload-button" class="secondary" type="submit">上传音频</button>
         </form>

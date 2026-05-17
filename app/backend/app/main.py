@@ -1,13 +1,14 @@
 import base64
 import secrets
 
-from fastapi import BackgroundTasks, FastAPI, File, Request, UploadFile
+from fastapi import BackgroundTasks, FastAPI, File, Form, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 
 from .admin import admin_status, admin_tasks
 from . import config
+from .audio import add_audio_metadata
 from .link_parser import extract_douyin_url
 from .models import ErrorCode, PitchCreateRequest, PitchJobStatus, PitchResponse, TaskCreateRequest, TaskResponse, TaskStatus
 from .task_store import create_task as create_task_record
@@ -19,6 +20,7 @@ from .task_store import (
     expire_if_needed,
     has_active_task,
     load_task,
+    sanitize_title,
     variant_key,
 )
 from .uploads import random_audio_name, save_upload, validate_upload
@@ -124,7 +126,7 @@ def create_task(payload: TaskCreateRequest, background_tasks: BackgroundTasks) -
             ),
         )
 
-    record = create_task_record(payload.share_text, douyin_url)
+    record = create_task_record(payload.share_text, douyin_url, title="抖音伴奏")
     background_tasks.add_task(process_task, record.task_id)
 
     return api_response(
@@ -138,7 +140,10 @@ def create_task(payload: TaskCreateRequest, background_tasks: BackgroundTasks) -
 
 
 @app.post("/api/uploads")
-def create_upload(file: UploadFile | None = File(default=None)) -> JSONResponse:
+def create_upload(
+    file: UploadFile | None = File(default=None),
+    title: str = Form(default=""),
+) -> JSONResponse:
     try:
         suffix, _content_type = validate_upload(file)
     except ValueError as exc:
@@ -174,7 +179,9 @@ def create_upload(file: UploadFile | None = File(default=None)) -> JSONResponse:
 
     relative_path = str(audio_path.relative_to(config.BASE_DIR))
     audio_url = f"/files/audio/{audio_name}"
-    record = create_uploaded_task(audio_path=relative_path, audio_url=audio_url, source="upload")
+    display_title = sanitize_title(title, "上传的音频")
+    add_audio_metadata(audio_path, display_title)
+    record = create_uploaded_task(audio_path=relative_path, audio_url=audio_url, source="upload", title=display_title)
     return api_response(201, response_for_record(record))
 
 
@@ -349,15 +356,17 @@ def response_for_record(record) -> TaskResponse:
         return TaskResponse(
             task_id=record.task_id,
             status=record.status,
+            title=record.title,
             expires_at=record.expires_at,
             audio_url=record.audio_url,
             audio_variants=record.audio_variants,
-            message="处理好了，点击下面链接播放",
+            message="伴奏已准备好，点击下面播放",
         )
     if record.status == TaskStatus.EXPIRED:
         return TaskResponse(
             task_id=record.task_id,
             status=record.status,
+            title=record.title,
             expires_at=record.expires_at,
             error_code=ErrorCode.TASK_EXPIRED,
             message="这个链接已经过期，请重新提取一次",
@@ -366,6 +375,7 @@ def response_for_record(record) -> TaskResponse:
         return TaskResponse(
             task_id=record.task_id,
             status=record.status,
+            title=record.title,
             expires_at=record.expires_at,
             error_code=record.error_code or ErrorCode.INTERNAL_ERROR,
             message="这次没有处理成功，请换一个视频试试",
@@ -373,6 +383,7 @@ def response_for_record(record) -> TaskResponse:
     return TaskResponse(
         task_id=record.task_id,
         status=record.status,
+        title=record.title,
         expires_at=record.expires_at,
         message="正在处理，请稍等",
     )

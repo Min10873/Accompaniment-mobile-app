@@ -93,7 +93,7 @@ def has_active_task() -> bool:
     return False
 
 
-def create_task(share_text: str, douyin_url: str) -> TaskRecord:
+def create_task(share_text: str, douyin_url: str, title: str | None = None) -> TaskRecord:
     config.ensure_data_dirs()
     now = utc_now()
     task_id = make_task_id()
@@ -105,6 +105,7 @@ def create_task(share_text: str, douyin_url: str) -> TaskRecord:
     record = TaskRecord(
         task_id=task_id,
         status=TaskStatus.QUEUED,
+        title=sanitize_title(title, "抖音伴奏"),
         created_at=created,
         updated_at=created,
         expires_at=expires,
@@ -221,6 +222,7 @@ def create_uploaded_task(
     audio_path: str,
     audio_url: str,
     source: str,
+    title: str | None = None,
     label: str = "原调",
 ) -> TaskRecord:
     config.ensure_data_dirs()
@@ -243,6 +245,7 @@ def create_uploaded_task(
     record = TaskRecord(
         task_id=task_id,
         status=TaskStatus.DONE,
+        title=sanitize_title(title, "上传的音频"),
         created_at=created,
         updated_at=created,
         expires_at=expires,
@@ -255,6 +258,13 @@ def create_uploaded_task(
     )
     save_task(record)
     return record
+
+
+def sanitize_title(value: str | None, fallback: str) -> str:
+    title = " ".join((value or "").split())
+    if not title:
+        return fallback
+    return title[:80]
 
 
 def expire_if_needed(record: TaskRecord, now: datetime | None = None) -> TaskRecord:

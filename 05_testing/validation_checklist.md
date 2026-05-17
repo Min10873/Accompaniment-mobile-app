@@ -67,6 +67,8 @@
 - [x] Q 已完成上传前后端联调验证：有效上传、错误上传、结果页能力和回归检查通过，结果 `02_vibe/results/Q-UPLOAD-FRONTEND-VALIDATE-01.result.md`。
 - [x] 本地父辈 UI 已完成 Page1/Page2 分离和双 tab 信息架构调整，并通过 Playwright 手机视口冒烟验证，截图 `/private/tmp/accompaniment-tabs-layout.png`。
 - [x] Q 已完成 tab 信息架构验证：Page 1/2 分离、双 tab、单原调隐藏版本切换条、半音 1-5、返回首页和回归检查通过，结果 `02_vibe/results/Q-TABBED-IA-VALIDATE-01.result.md`。
+- [x] 本地已实现歌曲名、下载文件名水印和音频 metadata 水印：Page 2 显示歌曲名，下载名使用 `歌曲名-版本-歌伴侣.后缀`，metadata 使用 `comment=from LFAPP`；Playwright 冒烟截图 `/private/tmp/accompaniment-title-download.png`。
+- [ ] Q 已完成歌曲名和水印验证，结果 `02_vibe/results/Q-TITLE-WATERMARK-VALIDATE-01.result.md`。
 - [ ] 上传入口已发布并在真实手机端实测。
 - [ ] 粘贴体验、返回首页和成功页布局改动已发布并在真实手机端实测。
 

@@ -12,7 +12,7 @@ def test_process_task_real_uses_download_and_extract_boundaries(monkeypatch):
         target_path.write_bytes(b"mp4")
         return target_path
 
-    def fake_extract(_video_path, target_path):
+    def fake_extract(_video_path, target_path, _title=None):
         calls.append("extract")
         target_path.write_bytes(b"mp3")
         return target_path
@@ -50,7 +50,7 @@ def test_process_task_real_marks_extract_failure(monkeypatch):
         target_path.write_bytes(b"mp4")
         return target_path
 
-    def fake_extract(_video_path, _target_path):
+    def fake_extract(_video_path, _target_path, _title=None):
         raise RuntimeError(ErrorCode.EXTRACT_FAILED.value)
 
     monkeypatch.setattr("app.worker.download_video", fake_download)

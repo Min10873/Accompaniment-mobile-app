@@ -187,6 +187,7 @@ def test_upload_over_20mb_returns_413_without_task():
 def test_upload_success_returns_done_task_with_original_variant_and_pitch_flow():
     response = client.post(
         "/api/uploads",
+        data={"title": "后来"},
         files={"file": ("my-song.m4a", b"m4a-bytes", "audio/mp4")},
     )
 
@@ -194,6 +195,7 @@ def test_upload_success_returns_done_task_with_original_variant_and_pitch_flow()
     body = response.json()
     assert re.fullmatch(r"[A-Z0-9]{8}", body["task_id"])
     assert body["status"] == "done"
+    assert body["title"] == "后来"
     assert body["audio_url"].startswith("/files/audio/")
     assert body["expires_at"]
     assert body["audio_variants"]["original"]["source"] == "upload"
@@ -203,6 +205,7 @@ def test_upload_success_returns_done_task_with_original_variant_and_pitch_flow()
     assert task_response.status_code == 200
     task_body = task_response.json()
     assert task_body["status"] == "done"
+    assert task_body["title"] == "后来"
     assert task_body["expires_at"] == body["expires_at"]
     assert task_body["audio_variants"]["original"]["source"] == "upload"
 
@@ -225,6 +228,16 @@ def test_upload_accepts_octet_stream_when_extension_is_supported():
     body = response.json()
     assert body["status"] == "done"
     assert body["audio_variants"]["original"]["source"] == "upload"
+
+
+def test_upload_defaults_title_when_missing():
+    response = client.post(
+        "/api/uploads",
+        files={"file": ("voice.mp3", b"mp3-bytes", "application/octet-stream")},
+    )
+
+    assert response.status_code == 201
+    assert response.json()["title"] == "上传的音频"
 
 
 def test_create_pitch_job_and_query_done_result():
@@ -314,7 +327,7 @@ def test_pitch_failure_does_not_change_original_done_task(monkeypatch):
     original = process_task_mock(record)
     monkeypatch.setattr(config, "MOCK_PROCESSING", False)
 
-    def fail_pitch(_source_path, _target_path, _direction, _semitones):
+    def fail_pitch(_source_path, _target_path, _direction, _semitones, _title=None):
         raise RuntimeError(ErrorCode.PITCH_FAILED.value)
 
     monkeypatch.setattr("app.worker.pitch_shift_mp3", fail_pitch)

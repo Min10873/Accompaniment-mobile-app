@@ -90,13 +90,16 @@ def test_create_uploaded_task_persists_original_variant_and_expires_at():
         audio_path="data/audio/uploaded.mp3",
         audio_url="/files/audio/uploaded.mp3",
         source="upload",
+        title="我的歌",
     )
 
     assert record.status == TaskStatus.DONE
+    assert record.title == "我的歌"
     assert record.expires_at
     assert record.audio_variants["original"].source == "upload"
     assert record.audio_variants["original"].expires_at == record.expires_at
 
     loaded = load_task(record.task_id)
     assert loaded is not None
+    assert loaded.title == "我的歌"
     assert loaded.audio_variants["original"].source == "upload"
