@@ -80,6 +80,7 @@
 - 当前生产仍是旧端口事实：sidecar `127.0.0.1:8000`、backend `127.0.0.1:8001`；迁移到 `7000/7001` 需要单独发布和服务器验收。
 - 本地父辈 UI 信息架构已调整：Page 1 和 Page 2 分离；Page 1 使用 `抖音链接/上传音频` 两个 tab；Page 2 使用 `播放保存/变调处理` 两个 tab；只有原调一个版本时不再显示重复的 `原调` 切换按钮；父辈端变调半音下拉收敛为 `1-5`；Playwright 手机视口冒烟通过，截图 `/private/tmp/accompaniment-tabs-layout.png`。
 - 新 tab 信息架构 QA 任务已派出：`02_vibe/tasks/Q-TABBED-IA-VALIDATE-01.md`，建议使用 `gemini flash`，结果路径为 `02_vibe/results/Q-TABBED-IA-VALIDATE-01.result.md`。
+- Q 已返回 tab 信息架构验证，结论为通过：Page 1/2 分离、Page 1 双 tab、Page 2 双 tab、单原调时隐藏版本切换条、半音 `1-5`、返回首页和后端回归均通过；截图已保存到 `02_vibe/results/screenshots/`。
 - 新目录已成为当前主线：`00_inbox/` 到 `07_traces/`。
 - 旧问题和旧输出已复制到 `99_archive/`。
 
@@ -94,10 +95,9 @@
 
 ## 下一步候选
 
-1. 等待并整合 `Q-TABBED-IA-VALIDATE-01` 验证结果。
-2. 发布并手机实测粘贴体验、返回首页、成功页布局、上传入口和 tab 信息架构改动。
-3. 明确 `deploy.sh rollback` 在 systemd 管理后的使用边界，避免误用 legacy pid 启停。
-4. 旧目录仍可稍后清理；删除前必须再次确认。
+1. 发布并手机实测粘贴体验、返回首页、成功页布局、上传入口和 tab 信息架构改动。
+2. 明确 `deploy.sh rollback` 在 systemd 管理后的使用边界，避免误用 legacy pid 启停。
+3. 旧目录仍可稍后清理；删除前必须再次确认。
 
 ## 待清理旧目录
 
