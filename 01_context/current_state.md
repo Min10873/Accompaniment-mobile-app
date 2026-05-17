@@ -74,13 +74,14 @@
 - 上传后端实现任务包已生成：`02_vibe/tasks/I-UPLOAD-BACKEND-IMPLEMENT-01.md`，结果路径为 `02_vibe/results/I-UPLOAD-BACKEND-IMPLEMENT-01.result.md`。
 - I 已返回上传后端实现，M 已本地复核并补齐部署依赖：`POST /api/uploads` 支持 `mp3/m4a/wav`、20MB 限制、随机文件名、上传成功直接创建 `done` 任务，并返回 `audio_url`、`audio_variants.original` 和 `expires_at`；M 补充 `app/backend/requirements.txt` 中的 `python-multipart`，并放宽 `application/octet-stream` 上传兜底以兼容手机/通用表单上传；重新运行 `python3 -m pytest app/backend/tests -q`，结果 `45 passed`。
 - 上传前后端联调验证任务已派出：`02_vibe/tasks/Q-UPLOAD-FRONTEND-VALIDATE-01.md`，建议使用 `gemini flash`，结果路径为 `02_vibe/results/Q-UPLOAD-FRONTEND-VALIDATE-01.result.md`。
+- Q 已返回上传前后端联调验证，结论为通过：有效上传、错误上传、首页入口、结果页播放器/下载/复制/变调/绝对有效期、抖音粘贴入口和返回首页回归均通过；剩余风险是未在真实物理手机上测试，剪贴板权限仍需真实手机观察。
 - 新目录已成为当前主线：`00_inbox/` 到 `07_traces/`。
 - 旧问题和旧输出已复制到 `99_archive/`。
 
 ## 当前未做
 
 - 手机粘贴体验、返回首页和成功页布局改动尚未发布和真实手机实测。
-- 音频上传后端和前端入口已在本地实现并通过冒烟验证；线上尚未发布，真实手机尚未测试。
+- 音频上传后端和前端入口已在本地实现，并通过 M 冒烟验证和 Q 联调验证；线上尚未发布，真实手机尚未测试。
 - UI 视觉风格尚未定稿，等待 Gemini 方案回收。
 - 未把当前可用版本提交并推送到 GitHub。
 - 未删除旧目录。
