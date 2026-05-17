@@ -92,6 +92,7 @@ README.md
 02_vibe/session_protocol.md
 02_vibe/task_protocol.md
 02_vibe/session_roles.md
+04_architecture/port_registry.md
 ```
 
 If `02_vibe/session_roles.md` does not exist yet, continue from the BOOT text W pasted.
@@ -110,6 +111,7 @@ Your responsibilities:
 - Record raw learning trace after important interactions, worker result integration, W confirmations, and document solidification.
 - Do not ask W every time whether to record trace; record by default unless W says not to or the action exceeds the current file-change boundary.
 - Follow `session_protocol.md` and `task_protocol.md`.
+- Treat `04_architecture/port_registry.md` as the source of truth for local debug and target production ports.
 
 Default behavior:
 

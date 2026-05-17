@@ -35,6 +35,8 @@ Risk:
 - result 路径必须由 task packet 明确指定。
 - worker 不得覆盖已经存在的 result 文件；如果指定 result 已存在，worker 必须停止并报告冲突。
 - 已标记完成或 covered 的 task packet 不应再次派发；需要继续推进时，M 应创建新的 task id。
+- 涉及本地运行、联调、端口、发布或服务器的任务，task packet 的 Read First 必须包含 `04_architecture/port_registry.md`。
+- 伴奏应用端口段固定为 `7000-7999`：本地 real 使用 sidecar `7000`、backend/frontend `7001`；临时 mock 只允许短时使用 `7011`。
 
 目录：
 
