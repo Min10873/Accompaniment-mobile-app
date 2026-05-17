@@ -346,7 +346,7 @@ def test_api_responses_do_not_expose_sensitive_internals():
     serialized = str(body)
 
     assert "Cookie" not in serialized
-    assert "127.0.0.1:8000" not in serialized
+    assert "127.0.0.1:7000" not in serialized
     assert "ffmpeg" not in serialized.lower()
     assert "traceback" not in serialized.lower()
 
@@ -402,7 +402,7 @@ def test_admin_status_returns_readonly_summary_without_full_task_details(monkeyp
     assert "recent" in body["tasks"]
     assert "https://v.douyin.com/admin123/" not in serialized
     assert "internal traceback" not in serialized
-    assert "127.0.0.1:8000" not in serialized
+    assert "127.0.0.1:7000" not in serialized
     assert "/data" not in serialized
     assert "/data/" not in serialized
     assert "Cookie" not in serialized

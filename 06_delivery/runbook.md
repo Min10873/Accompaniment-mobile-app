@@ -36,8 +36,9 @@
 - Debian 12。
 - 现有 VPN/x-ui/xray 不由本项目管理。
 - 本项目不碰 80/443。
-- 主后端只监听 `127.0.0.1:8001`。
-- sidecar 只监听 `127.0.0.1:8000`。
+- 当前生产主后端只监听 `127.0.0.1:8001`。
+- 当前生产 sidecar 只监听 `127.0.0.1:8000`。
+- 新端口规范目标为：sidecar `127.0.0.1:7000`，主后端 `127.0.0.1:7001`；迁移前按当前生产事实操作，迁移后同步更新本 runbook。
 - 公开父辈入口：`https://us.wumpus.top/`。
 - 公开 admin 入口：`https://us.wumpus.top/admin/`，受 Basic Auth 保护。
 
@@ -45,8 +46,8 @@ systemd 服务：
 
 | 服务 | 作用 | 端口 | 状态 |
 |---|---|---|---|
-| `accompaniment-backend.service` | 主 FastAPI 后端 | `127.0.0.1:8001` | enabled |
-| `accompaniment-sidecar.service` | 抖音下载 sidecar | `127.0.0.1:8000` | enabled |
+| `accompaniment-backend.service` | 主 FastAPI 后端 | 当前 `127.0.0.1:8001`，目标 `127.0.0.1:7001` | enabled |
+| `accompaniment-sidecar.service` | 抖音下载 sidecar | 当前 `127.0.0.1:8000`，目标 `127.0.0.1:7000` | enabled |
 | `x-ui.service` | 现有 VPN/xray | 现有端口 | 不由本项目管理 |
 
 重要边界：

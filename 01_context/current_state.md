@@ -75,7 +75,9 @@
 - I 已返回上传后端实现，M 已本地复核并补齐部署依赖：`POST /api/uploads` 支持 `mp3/m4a/wav`、20MB 限制、随机文件名、上传成功直接创建 `done` 任务，并返回 `audio_url`、`audio_variants.original` 和 `expires_at`；M 补充 `app/backend/requirements.txt` 中的 `python-multipart`，并放宽 `application/octet-stream` 上传兜底以兼容手机/通用表单上传；重新运行 `python3 -m pytest app/backend/tests -q`，结果 `45 passed`。
 - 上传前后端联调验证任务已派出：`02_vibe/tasks/Q-UPLOAD-FRONTEND-VALIDATE-01.md`，建议使用 `gemini flash`，结果路径为 `02_vibe/results/Q-UPLOAD-FRONTEND-VALIDATE-01.result.md`。
 - Q 已返回上传前后端联调验证，结论为通过：有效上传、错误上传、首页入口、结果页播放器/下载/复制/变调/绝对有效期、抖音粘贴入口和返回首页回归均通过；剩余风险是未在真实物理手机上测试，剪贴板权限仍需真实手机观察。
-- 本机测试约定已收敛：不再保留旧 mock 后端并行运行；当前本机完整链路应只使用 sidecar `127.0.0.1:8000` + real backend `127.0.0.1:8012`，`/api/health` 必须显示 `processing_mode="real"` 后再给 W 测试。
+- 端口规范已确定：伴奏应用统一使用 `7000-7999` 端口段；本地 real 链路使用 sidecar `127.0.0.1:7000` + backend/frontend `127.0.0.1:7001`，临时 mock 后端如必须使用则放在 `7011` 且用后关闭；详见 `04_architecture/port_registry.md`。
+- 当前本机已按新规范运行：`127.0.0.1:7000/docs` 为 sidecar，`127.0.0.1:7001/` 为 real backend/frontend，`/api/health` 返回 `processing_mode="real"`；旧本机端口 `8000/8012` 已关闭。
+- 当前生产仍是旧端口事实：sidecar `127.0.0.1:8000`、backend `127.0.0.1:8001`；迁移到 `7000/7001` 需要单独发布和服务器验收。
 - 新目录已成为当前主线：`00_inbox/` 到 `07_traces/`。
 - 旧问题和旧输出已复制到 `99_archive/`。
 

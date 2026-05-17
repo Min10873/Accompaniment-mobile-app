@@ -158,7 +158,7 @@ V1 使用进程内串行队列：
 sidecar 边界：
 
 - 正式后端只通过 `SIDECAR_BASE_URL` 调用本机 sidecar。
-- 默认候选：`http://127.0.0.1:8000`。
+- 默认候选：`http://127.0.0.1:7000`。
 - 调用路径：`/api/download?url=...&prefix=true&with_watermark=false`。
 - sidecar URL、Cookie、内部端口、内部路径和 ffmpeg 命令不得返回给前端。
 - Cookie 只存在 sidecar 私有配置中，不进入正式工程、仓库或 trace。
