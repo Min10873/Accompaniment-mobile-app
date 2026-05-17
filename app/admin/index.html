@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>伴奏提取 Admin</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <h1>伴奏提取 Admin</h1>
+          <p id="app-version" class="app-version">版本 --</p>
+          <p id="updated-at">尚未刷新</p>
+        </div>
+        <button id="refresh-button" type="button">刷新</button>
+      </header>
+
+      <section class="grid">
+        <article class="panel">
+          <h2>服务状态</h2>
+          <dl id="service-status"></dl>
+        </article>
+        <article class="panel">
+          <h2>存储</h2>
+          <dl id="storage-status"></dl>
+        </article>
+        <article class="panel">
+          <h2>任务统计</h2>
+          <div id="task-counts" class="chips"></div>
+        </article>
+      </section>
+
+      <section class="panel wide">
+        <h2>最近任务</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>任务号</th>
+                <th>状态</th>
+                <th>创建时间</th>
+                <th>更新时间</th>
+                <th>错误</th>
+                <th>预览</th>
+                <th>音频</th>
+              </tr>
+            </thead>
+            <tbody id="tasks-body"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+    <script src="./app.js"></script>
+  </body>
+</html>

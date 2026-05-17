@@ -1,0 +1,32 @@
+.DS_Store
+*.log
+
+# Local proof-of-concept work may contain third-party repos, logs, media, and private config.
+.poc/
+
+# Generated release artifacts and runtime outputs.
+dist/
+logs/
+root@
+
+# Python caches and local environments.
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# Local environment files.
+.env
+.env.*
+!.env.example
+
+# Runtime media and task data.
+*.mp3
+*.mp4
+*.m4a
+*.wav
+*.aac
+tasks/
+videos/
+audio/

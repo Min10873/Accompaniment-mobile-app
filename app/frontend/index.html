@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>伴奏提取</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="page-header">
+        <h1>伴奏提取</h1>
+        <button id="home-button" class="home-nav" type="button" hidden>返回首页</button>
+      </header>
+      <form id="task-form" class="panel">
+        <label for="share-text">粘贴抖音分享文本</label>
+        <button id="paste-button" class="paste-button" type="button">粘贴链接</button>
+        <textarea id="share-text" rows="8" placeholder="复制打开抖音，看看... https://v.douyin.com/..."></textarea>
+        <p id="paste-hint" class="input-hint">从抖音复制后，回到这里点“粘贴链接”。如果按钮没反应，就长按输入框选择粘贴。</p>
+        <button id="submit-button" type="submit">开始处理</button>
+      </form>
+      <section id="result" class="result" aria-live="polite"></section>
+      <footer class="page-footer">
+        <p id="app-version" class="app-version">版本 --</p>
+      </footer>
+    </main>
+    <script src="./app.js"></script>
+  </body>
+</html>
