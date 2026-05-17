@@ -40,6 +40,10 @@ class ErrorCode(StrEnum):
     PITCH_FAILED = "PITCH_FAILED"
     PITCH_TIMEOUT = "PITCH_TIMEOUT"
     INTERNAL_ERROR = "INTERNAL_ERROR"
+    UPLOAD_FILE_REQUIRED = "UPLOAD_FILE_REQUIRED"
+    UPLOAD_FILE_EMPTY = "UPLOAD_FILE_EMPTY"
+    UPLOAD_FILE_TYPE_UNSUPPORTED = "UPLOAD_FILE_TYPE_UNSUPPORTED"
+    UPLOAD_FILE_TOO_LARGE = "UPLOAD_FILE_TOO_LARGE"
 
 
 class TaskCreateRequest(BaseModel):
@@ -49,6 +53,7 @@ class TaskCreateRequest(BaseModel):
 class TaskResponse(BaseModel):
     task_id: str | None
     status: TaskStatus | None
+    expires_at: str | None = None
     audio_url: str | None = None
     audio_variants: dict[str, "AudioVariant"] | None = None
     error_code: ErrorCode | None = None
@@ -84,6 +89,7 @@ class AudioVariant(BaseModel):
     audio_path: str
     audio_url: str
     created_at: str
+    expires_at: str | None = None
     direction: PitchDirection | None = None
     semitones: int | None = None
     source: str | None = None

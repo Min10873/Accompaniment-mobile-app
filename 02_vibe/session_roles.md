@@ -10,21 +10,25 @@ This file is the source for fixed role boot commands and task/result exchange fo
 
 | Short Name | Full Name | Type | Main Responsibility |
 |---|---|---|---|
-| W | User | Human | Decide, confirm, start sessions, paste tasks/results |
-| M | Main | Main session | Understand W, control context, create worker prompts, integrate results |
-| P | Product | Worker session | Product scope, MVP boundary, user flow, product/architecture tradeoffs |
-| I | Implementation | Worker session | Technical research, code, scripts, debugging, local verification |
-| Q | QA | Worker session | Validation, acceptance criteria, failure modes, delivery risk |
+| W | User | Human | Decide, confirm, start clean worker sessions, pass task/result files |
+| M | Main | Long-lived main session | Understand W, control context, create task packets, integrate results |
+| P | Product | Stateless worker task | Product scope, MVP boundary, user flow, product/architecture tradeoffs |
+| I | Implementation | Stateless worker task | Technical research, code, scripts, debugging, local verification |
+| Q | QA | Stateless worker task | Validation, acceptance criteria, failure modes, delivery risk |
 
 ## Core Rules
 
 - M is the only main control role.
 - W normally talks only with M for decisions.
-- P/I/Q are worker sessions manually started by W.
-- W decides when to start a new session.
-- When W starts a new role session, W pastes that role's BOOT command.
+- P/I/Q are stateless workers by default.
+- W starts a clean worker session for each worker task.
+- M writes each worker task as a self-contained task packet file under `02_vibe/tasks/`.
+- W gives the task packet file to the selected worker/model.
+- Worker writes the result to the result file path specified by M under `02_vibe/results/`.
+- Worker must not overwrite an existing result file. If the specified result file exists, worker stops and reports the collision.
+- W tells M which worker result file is ready.
 - P/I/Q output is not project fact by default.
-- P/I/Q output must be pasted back to M as `P-R`, `I-R`, or `Q-R`.
+- P/I/Q output must use `P-R`, `I-R`, or `Q-R` inside the result file.
 - M integrates worker output and asks W to confirm.
 - Only W confirmation makes a decision project fact.
 - Confirmed decisions should be saved into project files when W approves a document action.
@@ -68,10 +72,10 @@ When a role searches external information:
 
 ## Session Reuse Rules
 
-- W decides whether to reuse or start a new session.
-- If a session is still reliable, W may paste a new TASK into the same role session.
-- If a session is lost, polluted, too long, off-track, crossing project phase, or about to start code changes, W may start a new session and paste the role BOOT.
-- M may suggest starting a new session, but W decides.
+- Worker sessions should not be reused across tasks by default.
+- A clean worker session is preferred for every task to avoid stale assumptions and context pollution.
+- If W intentionally reuses a worker session, the worker result is still not project fact until M integrates it and W confirms.
+- M should package role identity, required context, task scope, permissions, output path, and result format into each task packet.
 
 ---
 
@@ -120,9 +124,11 @@ Default behavior:
 When W asks to assign work:
 
 - Decide whether P, I, or Q is needed.
-- Generate a copyable `X-TASK`.
+- Generate a self-contained `X-TASK` packet file under `02_vibe/tasks/`.
+- Specify the expected result file under `02_vibe/results/`.
+- Use a unique task id/result path for each dispatch.
 - Do not fork subagents unless W explicitly asks for in-session subagents.
-- Assume W will manually paste the TASK into another role session.
+- Assume W will give the task packet file to a clean worker session.
 
 Output style:
 
@@ -386,30 +392,57 @@ Learning Trace 候选：
 - ...
 ```
 
-# TASK Template
+# TASK Packet Template
 
-Use this template when M creates a worker task for W to paste into P/I/Q.
-TASK should contain only task-specific differences. Do not repeat role identity, fixed context files, default permissions, or the full result format already defined by BOOT.
+Use this template when M creates a worker task packet for W to give to P/I/Q.
+The packet should be self-contained enough for a clean worker session.
 
 ```text
-X-TASK
+# Worker Task: TASK-ID
 
+## Worker Role
+You are X, the ... worker for this project.
+
+## Read First
+README.md
+01_context/current_state.md
+...
+
+## Task
 Task ID:
 Goal:
 
+## Context
 New Input:
 Extra Context Files:
+
+## Scope
 Scope:
 Special Allowed:
 Special Forbidden:
+
+## Output
+Write result to:
+02_vibe/results/TASK-ID.result.md
+
+If this file already exists, stop and report a result-file collision. Do not overwrite it.
+
 Output Focus:
 Done Criteria:
 Stop Condition:
+
+## Result Format
+X-R:
+...
 ```
 
 ## TASK Field Rules
 
 - `X` must be P, I, or Q.
+- Task files live under `02_vibe/tasks/`.
+- Result files live under `02_vibe/results/`.
+- Each task dispatch must use a unique result path.
+- Worker must never overwrite an existing result file.
 - `New Input` should include only the new task material that is not already covered by BOOT context.
 - `Extra Context Files` should list only task-specific files. Do not repeat the fixed BOOT files.
 - `Special Allowed` should list only permissions added for this task, such as file edits, code, commands, network research, services, dependencies, or server access.
@@ -422,7 +455,7 @@ Stop Condition:
 
 # RESULT Format
 
-W pastes worker output back to M using:
+Worker writes output to the specified result file using:
 
 ```text
 P-R:

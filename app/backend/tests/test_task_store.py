@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 from app.models import ErrorCode, TaskStatus
-from app.task_store import create_task, has_active_task, load_task, preview_share_text, task_path, update_task
+from app.task_store import create_task, create_uploaded_task, has_active_task, load_task, preview_share_text, task_path, update_task
 from app.task_store import utc_now
 
 
@@ -83,3 +83,20 @@ def test_old_task_json_without_pitch_fields_still_loads():
     assert record is not None
     assert record.audio_variants == {}
     assert record.pitch_jobs == {}
+
+
+def test_create_uploaded_task_persists_original_variant_and_expires_at():
+    record = create_uploaded_task(
+        audio_path="data/audio/uploaded.mp3",
+        audio_url="/files/audio/uploaded.mp3",
+        source="upload",
+    )
+
+    assert record.status == TaskStatus.DONE
+    assert record.expires_at
+    assert record.audio_variants["original"].source == "upload"
+    assert record.audio_variants["original"].expires_at == record.expires_at
+
+    loaded = load_task(record.task_id)
+    assert loaded is not None
+    assert loaded.audio_variants["original"].source == "upload"

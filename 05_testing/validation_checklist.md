@@ -61,6 +61,9 @@
 - [x] 粘贴体验改动已通过本地 Playwright 手机视口 mock 流程验证，截图 `/private/tmp/accompaniment-mobile-paste.png`。
 - [x] 本地任务恢复/结果页面已新增“重新开始”按钮，并通过 Playwright 验证可清除 `?task=` 回到主页，截图 `/private/tmp/accompaniment-home-button.png`。
 - [x] 本地成功页布局已调整并通过 Playwright 手机视口验证：返回首页在右上角，版本号在页尾，当前播放/下载与变调分区，半音说明可见，当前音频链接有效期显示为绝对日期。截图 `/private/tmp/accompaniment-result-layout.png`。
+- [x] 本地后端已实现 `POST /api/uploads`：支持 `mp3/m4a/wav`、20MB 限制、上传成功创建 `done` 任务并复用现有结果和变调链路。
+- [x] 上传后端测试已通过：`python3 -m pytest app/backend/tests -q`，结果 `45 passed`。
+- [x] 前端上传入口已接入并通过手机视口冒烟验证，截图 `/private/tmp/accompaniment-upload-entry.png`。
 - [ ] 粘贴体验、返回首页和成功页布局改动已发布并在真实手机端实测。
 
 ## Learning Trace

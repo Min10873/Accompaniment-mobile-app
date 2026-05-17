@@ -1,8 +1,11 @@
 const form = document.querySelector("#task-form");
+const uploadForm = document.querySelector("#upload-form");
 const textarea = document.querySelector("#share-text");
+const audioFile = document.querySelector("#audio-file");
 const pasteButton = document.querySelector("#paste-button");
 const pasteHint = document.querySelector("#paste-hint");
 const submitButton = document.querySelector("#submit-button");
+const uploadButton = document.querySelector("#upload-button");
 const result = document.querySelector("#result");
 const appVersion = document.querySelector("#app-version");
 const homeButton = document.querySelector("#home-button");
@@ -79,6 +82,48 @@ form.addEventListener("submit", async (event) => {
   }
 });
 
+uploadForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  clearTimeout(pollTimer);
+  clearTimeout(pitchPollTimer);
+  currentTaskData = null;
+  currentVariantKey = "original";
+  pitchBusy = false;
+
+  const file = audioFile.files && audioFile.files[0];
+  if (!file) {
+    showError("请先选择一个音频文件");
+    return;
+  }
+
+  setBusy(true);
+  showNotice("正在上传", "正在把音频上传到处理中心。");
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  try {
+    const response = await fetch("/api/uploads", {
+      method: "POST",
+      body: formData,
+    });
+    const data = await response.json();
+
+    if (!response.ok) {
+      setBusy(false);
+      showError(data.message || "这次没有上传成功，请换一个音频试试");
+      return;
+    }
+
+    setBusy(false);
+    rememberTask(data.task_id);
+    showSuccess(data);
+  } catch (error) {
+    setBusy(false);
+    showError("无法连接服务，请稍后再试");
+  }
+});
+
 loadVersion();
 restoreLastTask();
 
@@ -132,6 +177,7 @@ function resetToHome() {
   url.searchParams.delete("task");
   window.history.replaceState({}, "", url);
   textarea.value = "";
+  audioFile.value = "";
   pasteHint.textContent = "从抖音复制后，回到这里点“粘贴链接”。如果按钮没反应，就长按输入框选择粘贴。";
   homeButton.hidden = true;
   setBusy(false);
@@ -189,8 +235,11 @@ async function fetchTask(taskId) {
 function setBusy(isBusy) {
   submitButton.disabled = isBusy;
   pasteButton.disabled = isBusy;
+  uploadButton.disabled = isBusy;
+  audioFile.disabled = isBusy;
   textarea.readOnly = isBusy;
   submitButton.textContent = isBusy ? "处理中..." : "开始处理";
+  uploadButton.textContent = isBusy ? "处理中..." : "上传音频";
 }
 
 function focusForManualPaste(message = "请长按输入框，然后选择粘贴。") {
@@ -230,7 +279,7 @@ function renderSuccess(pitchMessage = "", isPitchBusy = pitchBusy) {
   const currentVariant = currentTaskData.audio_variants[currentVariantKey];
   const audioUrl = currentVariant.audio_url;
   const fullUrl = new URL(audioUrl, window.location.href).href;
-  const validUntil = formatValidUntil(currentVariant.created_at);
+  const validUntil = formatValidUntil(currentVariant.expires_at || currentTaskData.expires_at, currentVariant.created_at);
   const variants = Object.entries(currentTaskData.audio_variants);
   const variantButtons = variants
     .map(([key, variant]) => {
@@ -385,6 +434,7 @@ function normalizeTaskData(data) {
     variants.original = {
       kind: "original",
       audio_url: data.audio_url,
+      expires_at: data.expires_at,
       label: "原调",
     };
   }
@@ -403,6 +453,7 @@ function addVariantFromPitch(data, direction = null, semitones = null) {
     audio_url: data.audio_url,
     direction,
     semitones,
+    expires_at: data.expires_at || currentTaskData.expires_at,
     label: labelForVariant(data.variant_key, { direction, semitones }),
   };
 }
@@ -428,12 +479,21 @@ function showError(message, taskId = "") {
   `;
 }
 
-function formatValidUntil(createdAt) {
+function formatValidUntil(expiresAt, createdAt) {
+  const explicitDate = expiresAt ? new Date(expiresAt) : null;
+  if (explicitDate && !Number.isNaN(explicitDate.getTime())) {
+    return formatDate(explicitDate);
+  }
+
   const date = createdAt ? new Date(createdAt) : new Date();
   if (Number.isNaN(date.getTime())) {
     return "生成后 7 天";
   }
   date.setDate(date.getDate() + RETENTION_DAYS);
+  return formatDate(date);
+}
+
+function formatDate(date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");

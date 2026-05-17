@@ -141,6 +141,92 @@ def test_audio_file_mount_returns_200_for_mock_audio():
     assert response.content
 
 
+def test_upload_missing_file_returns_422_without_task():
+    response = client.post("/api/uploads", files={})
+
+    assert response.status_code == 422
+    body = response.json()
+    assert body["task_id"] is None
+    assert body["status"] is None
+    assert body["error_code"] == ErrorCode.UPLOAD_FILE_REQUIRED
+
+
+def test_upload_empty_file_returns_422_without_task():
+    response = client.post(
+        "/api/uploads",
+        files={"file": ("voice.mp3", b"", "audio/mpeg")},
+    )
+
+    assert response.status_code == 422
+    body = response.json()
+    assert body["error_code"] == ErrorCode.UPLOAD_FILE_EMPTY
+
+
+def test_upload_unsupported_type_returns_422_without_task():
+    response = client.post(
+        "/api/uploads",
+        files={"file": ("voice.txt", b"not audio", "text/plain")},
+    )
+
+    assert response.status_code == 422
+    body = response.json()
+    assert body["error_code"] == ErrorCode.UPLOAD_FILE_TYPE_UNSUPPORTED
+
+
+def test_upload_over_20mb_returns_413_without_task():
+    response = client.post(
+        "/api/uploads",
+        files={"file": ("voice.mp3", b"a" * (20 * 1024 * 1024 + 1), "audio/mpeg")},
+    )
+
+    assert response.status_code == 413
+    body = response.json()
+    assert body["error_code"] == ErrorCode.UPLOAD_FILE_TOO_LARGE
+
+
+def test_upload_success_returns_done_task_with_original_variant_and_pitch_flow():
+    response = client.post(
+        "/api/uploads",
+        files={"file": ("my-song.m4a", b"m4a-bytes", "audio/mp4")},
+    )
+
+    assert response.status_code == 201
+    body = response.json()
+    assert re.fullmatch(r"[A-Z0-9]{8}", body["task_id"])
+    assert body["status"] == "done"
+    assert body["audio_url"].startswith("/files/audio/")
+    assert body["expires_at"]
+    assert body["audio_variants"]["original"]["source"] == "upload"
+    assert body["audio_variants"]["original"]["expires_at"] == body["expires_at"]
+
+    task_response = client.get(f"/api/tasks/{body['task_id']}")
+    assert task_response.status_code == 200
+    task_body = task_response.json()
+    assert task_body["status"] == "done"
+    assert task_body["expires_at"] == body["expires_at"]
+    assert task_body["audio_variants"]["original"]["source"] == "upload"
+
+    pitch_response = client.post(
+        f"/api/tasks/{body['task_id']}/pitch",
+        json={"direction": "up", "semitones": 3},
+    )
+    assert pitch_response.status_code == 202
+    pitch_body = pitch_response.json()
+    assert pitch_body["status"] == "queued"
+
+
+def test_upload_accepts_octet_stream_when_extension_is_supported():
+    response = client.post(
+        "/api/uploads",
+        files={"file": ("voice.mp3", b"mp3-bytes", "application/octet-stream")},
+    )
+
+    assert response.status_code == 201
+    body = response.json()
+    assert body["status"] == "done"
+    assert body["audio_variants"]["original"]["source"] == "upload"
+
+
 def test_create_pitch_job_and_query_done_result():
     record = create_task("mock audio", "https://v.douyin.com/audio123/")
     original = process_task_mock(record)

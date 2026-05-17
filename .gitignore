@@ -30,3 +30,7 @@ venv/
 tasks/
 videos/
 audio/
+
+# Vibe worker task packets are project records, not runtime task data.
+!02_vibe/tasks/
+!02_vibe/tasks/**

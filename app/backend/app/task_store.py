@@ -142,6 +142,7 @@ def ensure_original_variant(record: TaskRecord) -> TaskRecord:
         audio_path=record.audio_path,
         audio_url=record.audio_url,
         created_at=record.stage_timestamps.done_at or record.updated_at,
+        expires_at=record.expires_at,
         source=None,
         label="原调",
     )
@@ -206,12 +207,54 @@ def add_pitch_variant(record: TaskRecord, job: PitchJobRecord, audio_path: str, 
         audio_path=audio_path,
         audio_url=audio_url,
         created_at=created,
+        expires_at=record.expires_at,
         source="original",
         label=label_for_variant(job.direction.value, job.semitones),
     )
     variants = dict(record.audio_variants)
     variants[job.variant_key] = variant
     return update_task(record, audio_variants=variants)
+
+
+def create_uploaded_task(
+    *,
+    audio_path: str,
+    audio_url: str,
+    source: str,
+    label: str = "原调",
+) -> TaskRecord:
+    config.ensure_data_dirs()
+    now = utc_now()
+    task_id = make_task_id()
+    while task_path(task_id).exists():
+        task_id = make_task_id()
+
+    created = now.isoformat(timespec="seconds")
+    expires = (now + timedelta(days=config.RETENTION_DAYS)).isoformat(timespec="seconds")
+    variant = AudioVariant(
+        kind="original",
+        audio_path=audio_path,
+        audio_url=audio_url,
+        created_at=created,
+        expires_at=expires,
+        source=source,
+        label=label,
+    )
+    record = TaskRecord(
+        task_id=task_id,
+        status=TaskStatus.DONE,
+        created_at=created,
+        updated_at=created,
+        expires_at=expires,
+        share_text_preview="",
+        douyin_url="",
+        audio_path=audio_path,
+        audio_url=audio_url,
+        audio_variants={"original": variant},
+        stage_timestamps=StageTimestamps(queued_at=created, done_at=created),
+    )
+    save_task(record)
+    return record
 
 
 def expire_if_needed(record: TaskRecord, now: datetime | None = None) -> TaskRecord:

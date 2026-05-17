@@ -19,6 +19,52 @@ Done Criteria:
 Risk:
 ```
 
+## Worker Task Packet 模式
+
+多 agent 协作默认采用无状态 worker task packet：
+
+- M 是长期主控，保留项目上下文、决策状态和整合职责。
+- P/I/Q worker 默认不保留跨任务 session。
+- W 每次给 worker 派活时，使用一个干净 session。
+- M 把 worker 身份、必读上下文、任务、权限、输出格式和结果路径写入一个任务文件。
+- W 把任务文件交给对应 worker/model。
+- worker 把结果写到指定 result 文件。
+- W 告诉 M 哪个 result 文件已返回。
+- M 读取 result，整合冲突、风险和待确认项。
+- worker 输出不是项目事实，只有 W 确认后才成为事实。
+- result 路径必须由 task packet 明确指定。
+- worker 不得覆盖已经存在的 result 文件；如果指定 result 已存在，worker 必须停止并报告冲突。
+- 已标记完成或 covered 的 task packet 不应再次派发；需要继续推进时，M 应创建新的 task id。
+
+目录：
+
+```text
+02_vibe/tasks/
+02_vibe/results/
+```
+
+命名：
+
+```text
+02_vibe/tasks/I-UPLOAD-BACKEND-PLAN-01.md
+02_vibe/results/I-UPLOAD-BACKEND-PLAN-01.result.md
+```
+
+任务文件必须包含：
+
+- Worker Role。
+- Read First。
+- Task ID 和 Goal。
+- Context。
+- Scope。
+- Special Allowed / Special Forbidden。
+- Output result file path。
+- Result overwrite policy。
+- Output Focus。
+- Done Criteria。
+- Stop Condition。
+- Result Format。
+
 ## Owner
 
 | Owner | 职责 |
@@ -75,4 +121,3 @@ Risk:
 下一步：
 - ...
 ```
-

@@ -1,7 +1,7 @@
 import base64
 import secrets
 
-from fastapi import BackgroundTasks, FastAPI, Request
+from fastapi import BackgroundTasks, FastAPI, File, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
@@ -14,12 +14,14 @@ from .task_store import create_task as create_task_record
 from .task_store import (
     cached_variant,
     create_pitch_job,
+    create_uploaded_task,
     ensure_original_variant,
     expire_if_needed,
     has_active_task,
     load_task,
     variant_key,
 )
+from .uploads import random_audio_name, save_upload, validate_upload
 from .worker import process_pitch_job, process_task_mock, process_task_real
 
 
@@ -133,6 +135,47 @@ def create_task(payload: TaskCreateRequest, background_tasks: BackgroundTasks) -
             message="已开始处理",
         ),
     )
+
+
+@app.post("/api/uploads")
+def create_upload(file: UploadFile | None = File(default=None)) -> JSONResponse:
+    try:
+        suffix, _content_type = validate_upload(file)
+    except ValueError as exc:
+        error_code = ErrorCode(exc.args[0])
+        status_code = 413 if error_code == ErrorCode.UPLOAD_FILE_TOO_LARGE else 422
+        return api_response(
+            status_code,
+            TaskResponse(
+                task_id=None,
+                status=None,
+                error_code=error_code,
+                message=_upload_message(error_code),
+            ),
+        )
+
+    audio_name = random_audio_name(suffix)
+    audio_path = config.AUDIO_DIR / audio_name
+    try:
+        save_upload(file, audio_path)
+    except ValueError as exc:
+        audio_path.unlink(missing_ok=True)
+        error_code = ErrorCode(exc.args[0])
+        status_code = 413 if error_code == ErrorCode.UPLOAD_FILE_TOO_LARGE else 422
+        return api_response(
+            status_code,
+            TaskResponse(
+                task_id=None,
+                status=None,
+                error_code=error_code,
+                message=_upload_message(error_code),
+            ),
+        )
+
+    relative_path = str(audio_path.relative_to(config.BASE_DIR))
+    audio_url = f"/files/audio/{audio_name}"
+    record = create_uploaded_task(audio_path=relative_path, audio_url=audio_url, source="upload")
+    return api_response(201, response_for_record(record))
 
 
 @app.post("/api/tasks/{task_id}/pitch")
@@ -306,6 +349,7 @@ def response_for_record(record) -> TaskResponse:
         return TaskResponse(
             task_id=record.task_id,
             status=record.status,
+            expires_at=record.expires_at,
             audio_url=record.audio_url,
             audio_variants=record.audio_variants,
             message="处理好了，点击下面链接播放",
@@ -314,6 +358,7 @@ def response_for_record(record) -> TaskResponse:
         return TaskResponse(
             task_id=record.task_id,
             status=record.status,
+            expires_at=record.expires_at,
             error_code=ErrorCode.TASK_EXPIRED,
             message="这个链接已经过期，请重新提取一次",
         )
@@ -321,14 +366,26 @@ def response_for_record(record) -> TaskResponse:
         return TaskResponse(
             task_id=record.task_id,
             status=record.status,
+            expires_at=record.expires_at,
             error_code=record.error_code or ErrorCode.INTERNAL_ERROR,
             message="这次没有处理成功，请换一个视频试试",
         )
     return TaskResponse(
         task_id=record.task_id,
         status=record.status,
+        expires_at=record.expires_at,
         message="正在处理，请稍等",
     )
+
+
+def _upload_message(error_code: ErrorCode) -> str:
+    if error_code == ErrorCode.UPLOAD_FILE_REQUIRED:
+        return "请选择一个音频文件"
+    if error_code == ErrorCode.UPLOAD_FILE_EMPTY:
+        return "文件是空的，请重新选择"
+    if error_code == ErrorCode.UPLOAD_FILE_TOO_LARGE:
+        return "文件大小不能超过 20MB"
+    return "暂不支持这个音频格式"
 
 
 def api_response(status_code: int, body: TaskResponse) -> JSONResponse:

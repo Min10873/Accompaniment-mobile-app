@@ -15,6 +15,8 @@
 | `task_protocol.md` | 定义任务格式、小动作/大动作和完成汇报 |
 | `memory_protocol.md` | 定义当前事实、历史材料、过程记录的边界 |
 | `trace_protocol.md` | 定义女儿 learning trace 如何记录 |
+| `tasks/` | M 生成的无状态 worker task packet |
+| `results/` | worker 返回的 result 文件 |
 
 ## M 的启动顺序
 
@@ -31,4 +33,3 @@
 - 大动作包括：创建代码工程、移动/删除文件、大规模重写文档、安装依赖、启动服务、操作服务器、一次修改超过 3 个文件。
 - 文档迁移采用“复制后确认”，旧文件先不动。
 - 当前阶段优先保证项目可控，再进入开发环境和编码。
-

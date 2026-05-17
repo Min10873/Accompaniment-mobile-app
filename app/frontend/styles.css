@@ -66,6 +66,12 @@ h1 {
   gap: 12px;
 }
 
+.upload-panel {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+
 label {
   font-size: 18px;
   font-weight: 700;
@@ -101,6 +107,29 @@ textarea:focus {
 }
 
 textarea[readonly] {
+  color: var(--hint);
+  background: #f3f4f6;
+}
+
+input[type="file"] {
+  width: 100%;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+input[type="file"]:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16);
+  outline: none;
+}
+
+input[type="file"]:disabled {
   color: var(--hint);
   background: #f3f4f6;
 }
