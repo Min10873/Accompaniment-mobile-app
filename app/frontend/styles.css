@@ -20,6 +20,10 @@
   box-sizing: border-box;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
@@ -66,10 +70,39 @@ h1 {
   gap: 12px;
 }
 
-.upload-panel {
-  margin-top: 18px;
-  padding-top: 18px;
-  border-top: 1px solid var(--border);
+.view-page {
+  min-height: 0;
+}
+
+.tab-bar {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.tab-button {
+  min-height: 52px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.tab-button.active {
+  border-color: rgba(37, 99, 235, 0.38);
+  background: #eff6ff;
+  color: var(--primary);
+}
+
+.tab-panel,
+.result-panel {
+  margin-top: 0;
+}
+
+.result-tabs {
+  margin: 14px 0 0;
 }
 
 label {
@@ -185,7 +218,7 @@ button:disabled {
 }
 
 .result {
-  margin-top: 22px;
+  margin-top: 0;
 }
 
 .result:empty {
@@ -315,7 +348,7 @@ audio {
 .pitch-panel {
   display: grid;
   gap: 10px;
-  margin-top: 16px;
+  margin-top: 14px;
   padding: 14px;
   border-radius: 8px;
   background: var(--panel);

@@ -12,20 +12,28 @@
         <h1>伴奏提取</h1>
         <button id="home-button" class="home-nav" type="button" hidden>返回首页</button>
       </header>
-      <form id="task-form" class="panel">
-        <label for="share-text">粘贴抖音分享文本</label>
-        <button id="paste-button" class="paste-button" type="button">粘贴链接</button>
-        <textarea id="share-text" rows="8" placeholder="复制打开抖音，看看... https://v.douyin.com/..."></textarea>
-        <p id="paste-hint" class="input-hint">从抖音复制后，回到这里点“粘贴链接”。如果按钮没反应，就长按输入框选择粘贴。</p>
-        <button id="submit-button" type="submit">开始处理</button>
-      </form>
-      <form id="upload-form" class="panel upload-panel">
-        <label for="audio-file">上传手机里的音频</label>
-        <input id="audio-file" name="file" type="file" accept=".mp3,.m4a,.wav,audio/mpeg,audio/mp4,audio/wav" />
-        <p class="input-hint">已有伴奏或录音时用这个入口。支持 mp3、m4a、wav，最大 20MB。</p>
-        <button id="upload-button" class="secondary" type="submit">上传音频</button>
-      </form>
-      <section id="result" class="result" aria-live="polite"></section>
+      <section id="home-page" class="view-page">
+        <div class="tab-bar" role="tablist" aria-label="获取音频方式">
+          <button id="tab-douyin" class="tab-button active" type="button" role="tab" aria-selected="true" aria-controls="task-form">抖音链接</button>
+          <button id="tab-upload" class="tab-button" type="button" role="tab" aria-selected="false" aria-controls="upload-form">上传音频</button>
+        </div>
+        <form id="task-form" class="panel tab-panel" role="tabpanel" aria-labelledby="tab-douyin">
+          <label for="share-text">粘贴抖音分享文本</label>
+          <button id="paste-button" class="paste-button" type="button">粘贴链接</button>
+          <textarea id="share-text" rows="8" placeholder="复制打开抖音，看看... https://v.douyin.com/..."></textarea>
+          <p id="paste-hint" class="input-hint">从抖音复制后，回到这里点“粘贴链接”。如果按钮没反应，就长按输入框选择粘贴。</p>
+          <button id="submit-button" type="submit">开始处理</button>
+        </form>
+        <form id="upload-form" class="panel tab-panel" role="tabpanel" aria-labelledby="tab-upload" hidden>
+          <label for="audio-file">上传手机里的音频</label>
+          <input id="audio-file" name="file" type="file" accept=".mp3,.m4a,.wav,audio/mpeg,audio/mp4,audio/wav" />
+          <p class="input-hint">已有伴奏或录音时用这个入口。支持 mp3、m4a、wav，最大 20MB。</p>
+          <button id="upload-button" class="secondary" type="submit">上传音频</button>
+        </form>
+      </section>
+      <section id="task-page" class="view-page" hidden>
+        <section id="result" class="result" aria-live="polite"></section>
+      </section>
       <footer class="page-footer">
         <p id="app-version" class="app-version">版本 --</p>
       </footer>

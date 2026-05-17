@@ -78,12 +78,14 @@
 - 端口规范已确定：伴奏应用统一使用 `7000-7999` 端口段；本地 real 链路使用 sidecar `127.0.0.1:7000` + backend/frontend `127.0.0.1:7001`，临时 mock 后端如必须使用则放在 `7011` 且用后关闭；详见 `04_architecture/port_registry.md`。
 - 当前本机已按新规范运行：`127.0.0.1:7000/docs` 为 sidecar，`127.0.0.1:7001/` 为 real backend/frontend，`/api/health` 返回 `processing_mode="real"`；旧本机端口 `8000/8012` 已关闭。
 - 当前生产仍是旧端口事实：sidecar `127.0.0.1:8000`、backend `127.0.0.1:8001`；迁移到 `7000/7001` 需要单独发布和服务器验收。
+- 本地父辈 UI 信息架构已调整：Page 1 和 Page 2 分离；Page 1 使用 `抖音链接/上传音频` 两个 tab；Page 2 使用 `播放保存/变调处理` 两个 tab；只有原调一个版本时不再显示重复的 `原调` 切换按钮；父辈端变调半音下拉收敛为 `1-5`；Playwright 手机视口冒烟通过，截图 `/private/tmp/accompaniment-tabs-layout.png`。
+- 新 tab 信息架构 QA 任务已派出：`02_vibe/tasks/Q-TABBED-IA-VALIDATE-01.md`，建议使用 `gemini flash`，结果路径为 `02_vibe/results/Q-TABBED-IA-VALIDATE-01.result.md`。
 - 新目录已成为当前主线：`00_inbox/` 到 `07_traces/`。
 - 旧问题和旧输出已复制到 `99_archive/`。
 
 ## 当前未做
 
-- 手机粘贴体验、返回首页和成功页布局改动尚未发布和真实手机实测。
+- 手机粘贴体验、返回首页、上传入口和 tab 信息架构改动尚未发布和真实手机实测。
 - 音频上传后端和前端入口已在本地实现，并通过 M 冒烟验证和 Q 联调验证；线上尚未发布，真实手机尚未测试。
 - UI 视觉风格尚未定稿，等待 Gemini 方案回收。
 - 未把当前可用版本提交并推送到 GitHub。
@@ -92,9 +94,10 @@
 
 ## 下一步候选
 
-1. 发布并手机实测粘贴体验、返回首页、成功页布局和上传入口改动。
-2. 明确 `deploy.sh rollback` 在 systemd 管理后的使用边界，避免误用 legacy pid 启停。
-3. 旧目录仍可稍后清理；删除前必须再次确认。
+1. 等待并整合 `Q-TABBED-IA-VALIDATE-01` 验证结果。
+2. 发布并手机实测粘贴体验、返回首页、成功页布局、上传入口和 tab 信息架构改动。
+3. 明确 `deploy.sh rollback` 在 systemd 管理后的使用边界，避免误用 legacy pid 启停。
+4. 旧目录仍可稍后清理；删除前必须再次确认。
 
 ## 待清理旧目录
 

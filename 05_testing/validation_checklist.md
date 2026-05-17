@@ -65,6 +65,8 @@
 - [x] 上传后端测试已通过：`python3 -m pytest app/backend/tests -q`，结果 `45 passed`。
 - [x] 前端上传入口已接入并通过手机视口冒烟验证，截图 `/private/tmp/accompaniment-upload-entry.png`。
 - [x] Q 已完成上传前后端联调验证：有效上传、错误上传、结果页能力和回归检查通过，结果 `02_vibe/results/Q-UPLOAD-FRONTEND-VALIDATE-01.result.md`。
+- [x] 本地父辈 UI 已完成 Page1/Page2 分离和双 tab 信息架构调整，并通过 Playwright 手机视口冒烟验证，截图 `/private/tmp/accompaniment-tabs-layout.png`。
+- [ ] Q 已完成 tab 信息架构验证，结果 `02_vibe/results/Q-TABBED-IA-VALIDATE-01.result.md`。
 - [ ] 上传入口已发布并在真实手机端实测。
 - [ ] 粘贴体验、返回首页和成功页布局改动已发布并在真实手机端实测。
 

@@ -1,5 +1,9 @@
 const form = document.querySelector("#task-form");
 const uploadForm = document.querySelector("#upload-form");
+const homePage = document.querySelector("#home-page");
+const taskPage = document.querySelector("#task-page");
+const douyinTab = document.querySelector("#tab-douyin");
+const uploadTab = document.querySelector("#tab-upload");
 const textarea = document.querySelector("#share-text");
 const audioFile = document.querySelector("#audio-file");
 const pasteButton = document.querySelector("#paste-button");
@@ -17,8 +21,11 @@ let pitchPollTimer = null;
 let currentTaskData = null;
 let currentVariantKey = "original";
 let pitchBusy = false;
+let resultTab = "play";
 
 homeButton.addEventListener("click", resetToHome);
+douyinTab.addEventListener("click", () => setHomeTab("douyin"));
+uploadTab.addEventListener("click", () => setHomeTab("upload"));
 
 pasteButton.addEventListener("click", async () => {
   if (!navigator.clipboard || typeof navigator.clipboard.readText !== "function") {
@@ -46,6 +53,7 @@ form.addEventListener("submit", async (event) => {
   currentTaskData = null;
   currentVariantKey = "original";
   pitchBusy = false;
+  resultTab = "play";
   const shareText = textarea.value.trim();
   if (!shareText) {
     showError("请先粘贴抖音分享文本");
@@ -89,6 +97,7 @@ uploadForm.addEventListener("submit", async (event) => {
   currentTaskData = null;
   currentVariantKey = "original";
   pitchBusy = false;
+  resultTab = "play";
 
   const file = audioFile.files && audioFile.files[0];
   if (!file) {
@@ -180,6 +189,9 @@ function resetToHome() {
   audioFile.value = "";
   pasteHint.textContent = "从抖音复制后，回到这里点“粘贴链接”。如果按钮没反应，就长按输入框选择粘贴。";
   homeButton.hidden = true;
+  homePage.hidden = false;
+  taskPage.hidden = true;
+  setHomeTab("douyin");
   setBusy(false);
   result.className = "result";
   result.innerHTML = "";
@@ -248,6 +260,7 @@ function focusForManualPaste(message = "请长按输入框，然后选择粘贴�
 }
 
 function showNotice(title, message) {
+  showTaskPage();
   homeButton.hidden = false;
   result.className = "result notice";
   result.innerHTML = `
@@ -257,6 +270,7 @@ function showNotice(title, message) {
 }
 
 function showProcessing(taskId, message) {
+  showTaskPage();
   homeButton.hidden = false;
   result.className = "result notice";
   result.innerHTML = `
@@ -270,10 +284,12 @@ function showSuccess(data) {
   currentTaskData = normalizeTaskData(data);
   currentVariantKey = "original";
   pitchBusy = false;
+  resultTab = "play";
   renderSuccess();
 }
 
 function renderSuccess(pitchMessage = "", isPitchBusy = pitchBusy) {
+  showTaskPage();
   homeButton.hidden = false;
   pitchBusy = isPitchBusy;
   const currentVariant = currentTaskData.audio_variants[currentVariantKey];
@@ -281,36 +297,47 @@ function renderSuccess(pitchMessage = "", isPitchBusy = pitchBusy) {
   const fullUrl = new URL(audioUrl, window.location.href).href;
   const validUntil = formatValidUntil(currentVariant.expires_at || currentTaskData.expires_at, currentVariant.created_at);
   const variants = Object.entries(currentTaskData.audio_variants);
-  const variantButtons = variants
-    .map(([key, variant]) => {
-      const isActive = key === currentVariantKey;
-      return `<button class="variant-button${isActive ? " active" : ""}" type="button" data-variant-key="${escapeAttribute(key)}" ${isActive ? "disabled" : ""}>${escapeHtml(variant.label || labelForVariant(key, variant))}</button>`;
-    })
-    .join("");
+  const variantButtons = variants.length > 1
+    ? `<div class="variant-bar" aria-label="音频版本">
+        ${variants
+          .map(([key, variant]) => {
+            const isActive = key === currentVariantKey;
+            return `<button class="variant-button${isActive ? " active" : ""}" type="button" data-variant-key="${escapeAttribute(key)}" ${isActive ? "disabled" : ""}>${escapeHtml(variant.label || labelForVariant(key, variant))}</button>`;
+          })
+          .join("")}
+      </div>`
+    : "";
+  const playPanelHidden = resultTab === "play" ? "" : " hidden";
+  const pitchPanelHidden = resultTab === "pitch" ? "" : " hidden";
   result.className = "result notice success";
   result.innerHTML = `
     <h2>处理好了</h2>
-    <div class="player">
-      <audio controls src="${escapeAttribute(audioUrl)}"></audio>
+    <div class="tab-bar result-tabs" role="tablist" aria-label="结果功能">
+      <button id="result-tab-play" class="tab-button${resultTab === "play" ? " active" : ""}" type="button" role="tab" aria-selected="${resultTab === "play"}" aria-controls="play-panel">播放保存</button>
+      <button id="result-tab-pitch" class="tab-button${resultTab === "pitch" ? " active" : ""}" type="button" role="tab" aria-selected="${resultTab === "pitch"}" aria-controls="pitch-panel">变调处理</button>
     </div>
 
-    <section class="current-version">
-      <div>
-        <p class="section-label">当前播放</p>
-        <p class="current-version-name">${escapeHtml(currentVariant.label || labelForVariant(currentVariantKey, currentVariant))}</p>
-      </div>
-      <div class="variant-bar" aria-label="音频版本">
+    <section id="play-panel" class="result-panel"${playPanelHidden} role="tabpanel" aria-labelledby="result-tab-play">
+      <section class="current-version">
+        <div>
+          <p class="section-label">当前版本</p>
+          <p class="current-version-name">${escapeHtml(currentVariant.label || labelForVariant(currentVariantKey, currentVariant))}</p>
+        </div>
         ${variantButtons}
+      </section>
+      <div class="player">
+        <audio controls src="${escapeAttribute(audioUrl)}"></audio>
       </div>
+      <div class="result-actions">
+        <a class="button-link primary" href="${escapeAttribute(audioUrl)}" download>下载音频</a>
+        <button class="secondary" type="button" id="copy-link">复制链接</button>
+      </div>
+      <p class="small-note">当前音频链接有效到 ${escapeHtml(validUntil)}。</p>
     </section>
 
-    <div class="result-actions">
-      <a class="button-link primary" href="${escapeAttribute(audioUrl)}" download>下载音频</a>
-      <button class="secondary" type="button" id="copy-link">复制链接</button>
-    </div>
-
-    <form id="pitch-form" class="pitch-panel">
-      <h3>变调</h3>
+    <form id="pitch-panel" class="pitch-panel result-panel"${pitchPanelHidden} role="tabpanel" aria-labelledby="result-tab-pitch">
+      <h3>变调处理</h3>
+      <p class="small-note">当前基准：${escapeHtml(currentVariant.label || labelForVariant(currentVariantKey, currentVariant))}</p>
       <div class="pitch-row" role="group" aria-label="升降调">
         <label class="choice"><input type="radio" name="pitch-direction" value="up" checked />升高</label>
         <label class="choice"><input type="radio" name="pitch-direction" value="down" />降低</label>
@@ -320,7 +347,7 @@ function renderSuccess(pitchMessage = "", isPitchBusy = pitchBusy) {
         <span>1 = 半音，2 = 全音</span>
       </div>
       <select id="pitch-semitones" name="pitch-semitones">
-        ${Array.from({ length: 11 }, (_, index) => {
+        ${Array.from({ length: 5 }, (_, index) => {
           const value = index + 1;
           return `<option value="${value}">${value}</option>`;
         }).join("")}
@@ -329,9 +356,17 @@ function renderSuccess(pitchMessage = "", isPitchBusy = pitchBusy) {
       <button class="secondary" type="button" id="use-original" ${currentVariantKey === "original" ? "disabled" : ""}>切回原调</button>
       ${pitchMessage ? `<p class="pitch-status">${escapeHtml(pitchMessage)}</p>` : ""}
     </form>
-    <p class="small-note">当前音频链接有效到 ${escapeHtml(validUntil)}。</p>
     <p class="task-id">任务号：${escapeHtml(currentTaskData.task_id)}</p>
   `;
+
+  document.querySelector("#result-tab-play").addEventListener("click", () => {
+    resultTab = "play";
+    renderSuccess(pitchMessage, pitchBusy);
+  });
+  document.querySelector("#result-tab-pitch").addEventListener("click", () => {
+    resultTab = "pitch";
+    renderSuccess(pitchMessage, pitchBusy);
+  });
 
   document.querySelectorAll("[data-variant-key]").forEach((button) => {
     button.addEventListener("click", () => {
@@ -345,17 +380,19 @@ function renderSuccess(pitchMessage = "", isPitchBusy = pitchBusy) {
     renderSuccess();
   });
 
-  document.querySelector("#pitch-form").addEventListener("submit", submitPitch);
+  document.querySelector("#pitch-panel").addEventListener("submit", submitPitch);
 
   const copyButton = document.querySelector("#copy-link");
-  copyButton.addEventListener("click", async () => {
-    try {
-      await navigator.clipboard.writeText(fullUrl);
-      copyButton.textContent = "已复制";
-    } catch (error) {
-      copyButton.textContent = "复制失败";
-    }
-  });
+  if (copyButton) {
+    copyButton.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(fullUrl);
+        copyButton.textContent = "已复制";
+      } catch (error) {
+        copyButton.textContent = "复制失败";
+      }
+    });
+  }
 }
 
 async function submitPitch(event) {
@@ -368,6 +405,7 @@ async function submitPitch(event) {
   const direction = formData.get("pitch-direction");
   const semitones = Number(formData.get("pitch-semitones"));
   pitchBusy = true;
+  resultTab = "pitch";
   renderSuccess("正在提交变调请求", true);
 
   try {
@@ -383,10 +421,12 @@ async function submitPitch(event) {
       addVariantFromPitch(data, direction, semitones);
       currentVariantKey = data.variant_key;
       pitchBusy = false;
+      resultTab = "play";
       renderSuccess(data.message || "这个版本已经生成过，可以直接播放");
       return;
     }
     if (response.status === 202 && data.pitch_job_id) {
+      resultTab = "pitch";
       renderSuccess(data.message || "正在调整音高", true);
       pollPitch(currentTaskData.task_id, data.pitch_job_id);
       return;
@@ -412,6 +452,7 @@ async function fetchPitchJob(taskId, pitchJobId) {
       addVariantFromPitch(data);
       currentVariantKey = data.variant_key;
       pitchBusy = false;
+      resultTab = "play";
       renderSuccess(data.message || "变调好了，可以播放");
       return;
     }
@@ -470,6 +511,7 @@ function labelForVariant(key, variant = {}) {
 }
 
 function showError(message, taskId = "") {
+  showTaskPage();
   homeButton.hidden = false;
   result.className = "result notice danger";
   result.innerHTML = `
@@ -477,6 +519,26 @@ function showError(message, taskId = "") {
     <p>${escapeHtml(message)}</p>
     ${taskId ? `<p class="task-id">任务号：${escapeHtml(taskId)}</p>` : ""}
   `;
+}
+
+function showTaskPage() {
+  homePage.hidden = true;
+  taskPage.hidden = false;
+}
+
+function setHomeTab(tabName) {
+  const isUpload = tabName === "upload";
+  uploadTab.classList.toggle("active", isUpload);
+  uploadTab.setAttribute("aria-selected", String(isUpload));
+  douyinTab.classList.toggle("active", !isUpload);
+  douyinTab.setAttribute("aria-selected", String(!isUpload));
+  uploadForm.hidden = !isUpload;
+  form.hidden = isUpload;
+  if (isUpload) {
+    audioFile.focus();
+  } else {
+    textarea.focus();
+  }
 }
 
 function formatValidUntil(expiresAt, createdAt) {
